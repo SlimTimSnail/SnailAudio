@@ -6,7 +6,7 @@ using Godot;
 using Godot.Collections;
 
 [Tool]
-[Icon("uid://dfelah12kagti")]
+[Icon("uid://dhloy1kg42olc")]
 [GlobalClass]
 public partial class AudioEvent : Resource
 {

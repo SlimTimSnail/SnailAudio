@@ -1,6 +1,9 @@
+// -----------------------------------------------------------------------
+// Copyright (c) 2026 Tim Donnan. All rights reserved.
+// -----------------------------------------------------------------------
+
 #if TOOLS
 using Godot;
-using System;
 
 [Tool]
 public partial class SnailAudioPlugin : EditorPlugin
@@ -9,7 +12,7 @@ public partial class SnailAudioPlugin : EditorPlugin
 
 	public override void _EnterTree()
 	{
-		AddAutoloadSingleton(_autoloadName, "res://addons/SnailAudio/AudioManager.cs");
+		AddAutoloadSingleton(_autoloadName, "res://addons/SnailAudio/Scripts/AudioManager.cs");
 	}
 
 	public override void _ExitTree()

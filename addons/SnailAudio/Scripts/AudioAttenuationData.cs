@@ -5,7 +5,7 @@
 using Godot;
 
 [Tool]
-[Icon("uid://dfelah12kagti")]
+[Icon("uid://i18wynnwlhoj")]
 [GlobalClass]
 public partial class AudioAttenuationData : Resource
 {

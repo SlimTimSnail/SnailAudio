@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dfelah12kagti"
-path="res://.godot/imported/SnailIcon.svg-55d480f674bd08698c0d27be10a19e64.ctex"
+uid="uid://c33id2x1riqxp"
+path="res://.godot/imported/NodeIcon.svg-b8128032700443233a6cc10965878625.ctex"
 metadata={
 "has_editor_variant": true,
 "vram_texture": false
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://addons/SnailAudio/SnailIcon.svg"
-dest_files=["res://.godot/imported/SnailIcon.svg-55d480f674bd08698c0d27be10a19e64.ctex"]
+source_file="res://addons/SnailAudio/Icons/NodeIcon.svg"
+dest_files=["res://.godot/imported/NodeIcon.svg-b8128032700443233a6cc10965878625.ctex"]
 
 [params]
 

@@ -6,7 +6,8 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
-[Icon("uid://dfelah12kagti")]
+[Icon("uid://c33id2x1riqxp")]
+[Tool]
 public partial class AudioManager : Node
 {
     public static AudioManager Instance { get; private set; }

@@ -7,7 +7,7 @@ using Godot.Collections;
 using System;
 
 [Tool]
-[Icon("uid://dfelah12kagti")]
+[Icon("uid://378jdspwdk1x")]
 [GlobalClass]
 public partial class AudioEventPlayer : Node
 {
