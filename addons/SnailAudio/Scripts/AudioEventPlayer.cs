@@ -26,7 +26,7 @@ public partial class AudioEventPlayer : Node
     }
 
     // Exported if the event attenuation data != null
-    private Node2D _attachToNode = null;
+    private Node _attachToNode = null;
 
     [Export]
     public bool PlayOnReady
@@ -45,8 +45,8 @@ public partial class AudioEventPlayer : Node
     // Exported if PlayOnReady = true
     private bool _asOneShot = false;
 
-    [Export]
-    private bool _stopOnExitTree = true;
+    //[Export]
+    //private bool _stopOnExitTree = true;
 
     private Guid _eventId = Guid.NewGuid();
 
@@ -64,7 +64,7 @@ public partial class AudioEventPlayer : Node
         // If the audio event should be positioned in the world, check for or spawn a stream player at the end of the frame.
         if (GodotObject.IsInstanceValid(_attachToNode) && AudioEvent.AttenuationData != null)
         { 
-            CallDeferred(MethodName.SpawnAudioPlayer);
+            CallDeferred(MethodName.AssignAudioPlayer);
         }
     }
 
@@ -89,10 +89,10 @@ public partial class AudioEventPlayer : Node
     {
         base._ExitTree();
 
-        if (_stopOnExitTree)
-        {
-            StopAudio();
-        }
+        //if (_stopOnExitTree)
+        //{
+            //StopAudio();
+        //}
     }
 
 
@@ -177,29 +177,20 @@ public partial class AudioEventPlayer : Node
     // Private Functions
     //
 
-    private void SpawnAudioPlayer ()
+    private void AssignAudioPlayer ()
     {
         // Checks if the attached node already has an appropriate audio player. If not, creates one. 
         // An appropriate audio player has the same Bus and attenuation data.
-        if (CheckForAudioPlayer(out AudioStreamPlayer2D audioPlayer))
+        if (EventValid())
         {
-            _audioPlayer = audioPlayer;
-        }
-        else
-        {
-            AudioStreamPlayer2D newAudioPlayer = new()
+            AudioManager.Instance.SpawnAudioPlayer(AudioEvent, _attachToNode, out AudioStreamPlayer2D audioPlayer);
+            
+            if (GodotObject.IsInstanceValid(audioPlayer))
             {
-            Bus = AudioEvent.AudioBus,
-            MaxPolyphony = 64,
-            Stream = new AudioStreamPolyphonic()
-            };
-
-            //_attachToNode.CallDeferred(MethodName.AddChild, newAudioPlayer);
-            _attachToNode.AddChild(newAudioPlayer);
-            _audioPlayer = newAudioPlayer;
+                _audioPlayer = audioPlayer;
+                _attachToNode.TreeExiting += StopAudio;
+            }
         }
-
-        _attachToNode.TreeExiting += StopAudio;
     }
 
 

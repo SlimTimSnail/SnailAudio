@@ -16,6 +16,8 @@ public partial class AudioManager : Node
 
     private Dictionary<Guid, (AudioStreamPlaybackPolyphonic StreamPlayback, long StreamIndex, AudioEvent AudioEvent)> _eventRegister = [];
 
+    private readonly int _defaultMaxPolyphony = 64;
+
 
     public override void _Ready()
     {
@@ -85,6 +87,36 @@ public partial class AudioManager : Node
                 }
             }
         }
+    }
+
+    public void SpawnAudioPlayer (AudioEvent audioEvent, Node attachedNode, out AudioStreamPlayer2D audioPlayer)
+    {
+        // Checks if the attached node already has an appropriate audio player. If not, creates one. 
+        // An appropriate audio player has the same Bus and attenuation data.
+        if (attachedNode is Node2D attachedNode2D)
+        {
+            if (CheckForAudioPlayer(audioEvent, attachedNode2D, out AudioStreamPlayer2D checkedAudioPlayer))
+            {
+                audioPlayer = checkedAudioPlayer;
+                return;
+            }
+            else
+            {
+                AudioStreamPlayer2D newAudioPlayer = new()
+                {
+                Bus = audioEvent.AudioBus,
+                MaxPolyphony = _defaultMaxPolyphony,
+                Stream = new AudioStreamPolyphonic()
+                };
+
+                attachedNode.AddChild(newAudioPlayer);
+                audioPlayer = newAudioPlayer;
+                return;
+            }
+        }
+        // else is node 3d do the same shit but different???
+        audioPlayer = null;
+        return;
     }
 
 
@@ -181,7 +213,7 @@ public partial class AudioManager : Node
             AudioStreamPlayer newAudioPlayer = new()
             {
                 Bus = AudioServer.GetBusName(i),
-                MaxPolyphony = 64,
+                MaxPolyphony = _defaultMaxPolyphony,
                 Stream = new AudioStreamPolyphonic()
             };
 
@@ -189,5 +221,40 @@ public partial class AudioManager : Node
 
             _genericBusRegister.Add(i, newAudioPlayer);
         }
+    }
+
+
+    //
+    // Bool functions
+    //
+
+    private bool CheckForAudioPlayer (AudioEvent audioEvent, Node2D attachedNode, out AudioStreamPlayer2D result)
+    {
+        // Checks if the attached node already has an appropriate audio player. 
+        // An appropriate audio player has the same Bus and attenuation data. Otherwise we need to make a new one.
+        foreach (Node attachedChild in attachedNode.GetChildren())
+        {
+            if (attachedChild is AudioStreamPlayer2D audioPlayer)
+            {
+                if (audioEvent.AudioBus == audioPlayer.Bus && CompareAttenuationData(audioEvent.AttenuationData, audioPlayer))
+                {
+                    result = audioPlayer;
+                    return true;
+                }
+            }
+        }
+        result = null;
+        return false;
+    }
+
+    private bool CompareAttenuationData (AudioAttenuationData eventAttenuationData, AudioStreamPlayer2D audioPlayer)
+    {
+        // I want to eventually be able to compare this via the data asset, but this isn't stored on the player currently
+        if (eventAttenuationData.Attenuation == audioPlayer.Attenuation && eventAttenuationData.MaxDistance == audioPlayer.MaxDistance && eventAttenuationData.PanningStrength == audioPlayer.PanningStrength)
+        {
+            return true;
+        }
+
+        return false;
     }
 }
