@@ -76,11 +76,11 @@ public partial class AudioEventPlayer : Node
         {
             if (_asOneShot == true)
             {
-                PlayOneShot();
+                CallDeferred(MethodName.PlayOneShot);
             }
             else
             {
-                StartAudio();
+                CallDeferred(MethodName.StartAudio);;
             }
         }
     }
