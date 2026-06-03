@@ -51,40 +51,43 @@ public partial class AudioManager : Node
 
     public void StartAudioEvent (AudioEvent audioEvent, Guid eventId)
     {
-        if (audioEvent != null && eventId != Guid.Empty && !_eventRegister.ContainsKey(eventId))
+        if (audioEvent != null && eventId != Guid.Empty)
         {
-            HandleAudioEvent(audioEvent, null, eventId);
+            if (!IsEventPlaying(eventId, out AudioStreamPlaybackPolyphonic outStreamPlayback, out long outStreamIndex, out AudioEvent outAudioEvent))
+            {
+                HandleAudioEvent(audioEvent, null, eventId);
+            } 
         }
     }
 
     public void StartAudioEventAttached (AudioEvent audioEvent, AudioStreamPlayer2D audioPlayer, Guid eventId)
     {
-        if (audioEvent != null && GodotObject.IsInstanceValid(audioPlayer) && eventId != Guid.Empty && !_eventRegister.ContainsKey(eventId))
+        if (audioEvent != null && GodotObject.IsInstanceValid(audioPlayer) && eventId != Guid.Empty)
         {
-            HandleAudioEvent(audioEvent, audioPlayer, eventId);
+            if (!IsEventPlaying(eventId, out AudioStreamPlaybackPolyphonic outStreamPlayback, out long outStreamIndex, out AudioEvent outAudioEvent))
+            {
+                HandleAudioEvent(audioEvent, audioPlayer, eventId);
+            }
         }
     }
 
     public void StopAudioEvent (Guid eventId)
     {
-        if (eventId != Guid.Empty && _eventRegister.ContainsKey(eventId))
+        if (IsEventPlaying(eventId, out AudioStreamPlaybackPolyphonic streamPlayback, out long streamIndex, out AudioEvent audioEvent))
         {
-            if (_eventRegister.TryGetValue(eventId, out (AudioStreamPlaybackPolyphonic streamPlayback, long streamIndex, AudioEvent audioEvent) value))
-            {
-                _eventRegister.Remove(eventId);
+            _eventRegister.Remove(eventId);
 
-                if (value.audioEvent.FadeOutLength <= 0f)
-                {
-                    // No fade out time, just stop
-                    CleanUpStream(value.streamPlayback, value.streamIndex);
-                }
-                else
-                {
-                    // Perform fade out
-                    Tween fadeOutTween = CreateTween();
-                    fadeOutTween.TweenMethod(Callable.From((float volume) => value.streamPlayback.SetStreamVolume(value.streamIndex, volume)), value.audioEvent.Volume, -80f, value.audioEvent.FadeOutLength);
-                    fadeOutTween.Finished += () => CleanUpStream(value.streamPlayback, value.streamIndex);
-                }
+            if (audioEvent.FadeOutLength <= 0f)
+            {
+                // No fade out time, just stop
+                EndStreamPlayback(streamPlayback, streamIndex);
+            }
+            else
+            {
+                // Perform fade out
+                Tween fadeOutTween = CreateTween();
+                fadeOutTween.TweenMethod(Callable.From((float volume) => streamPlayback.SetStreamVolume(streamIndex, volume)), audioEvent.Volume, -80f, audioEvent.FadeOutLength);
+                fadeOutTween.Finished += () => EndStreamPlayback(streamPlayback, streamIndex);
             }
         }
     }
@@ -136,18 +139,18 @@ public partial class AudioManager : Node
 
         if (GodotObject.IsInstanceValid(audioPlayer))
         {
+
             if (audioPlayer.Stream is not AudioStreamPolyphonic)
             {
                 GD.Print("For some reason this audio stream isn't polyphonic. Sound will not play.");
                 return;
             }
 
-            // This is just make sure the stream is running, it doesn't actually play sound
             if (!audioPlayer.IsPlaying())
             {
                 audioPlayer.Play();
             }
-
+            // This is just make sure the stream is running, it doesn't actually play sound
             streamPlayback = audioPlayer.GetStreamPlayback() as AudioStreamPlaybackPolyphonic;
         }
         else
@@ -191,6 +194,8 @@ public partial class AudioManager : Node
             fadeInTween.TweenMethod(Callable.From((float volume) => streamPlayback.SetStreamVolume(streamIndex, volume)), -80f, audioEvent.Volume, audioEvent.FadeInLength);
         }
 
+        
+
         // If the guid is empty, the sound is a oneshot and we can forget about this sound now, otherwise add it to the dict
         if (eventId != Guid.Empty)
         {
@@ -198,7 +203,7 @@ public partial class AudioManager : Node
         }
     }
 
-    private void CleanUpStream (AudioStreamPlaybackPolyphonic streamPlayback, long streamIndex)
+    private void EndStreamPlayback (AudioStreamPlaybackPolyphonic streamPlayback, long streamIndex)
     {
         streamPlayback.StopStream(streamIndex);
         // ToDo: do I need to stop the audio stream player from playing if there are no streams left?
@@ -255,6 +260,28 @@ public partial class AudioManager : Node
             return true;
         }
 
+        return false;
+    }
+
+    private bool IsEventPlaying (Guid eventId, out AudioStreamPlaybackPolyphonic streamPlayback, out long streamIndex, out AudioEvent audioEvent)
+    {
+        if (_eventRegister.TryGetValue(eventId, out (AudioStreamPlaybackPolyphonic streamPlayback, long streamIndex, AudioEvent audioEvent) value))
+        {
+            if (value.streamPlayback.IsStreamPlaying(value.streamIndex))
+            {
+                streamPlayback = value.streamPlayback;
+                streamIndex = value.streamIndex;
+                audioEvent = value.audioEvent;
+                return true;
+            }
+            else
+            {
+                _eventRegister.Remove(eventId);
+            }
+        }
+        streamPlayback = null;
+        streamIndex = 0;
+        audioEvent = null;
         return false;
     }
 }
